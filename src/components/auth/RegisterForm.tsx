@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, FormProvider } from "react-hook-form";
-
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { registerSchema, type RegisterFormData } from "@/lib/validations";
 import {
   FormField,
@@ -21,6 +22,10 @@ import {
 } from "@/components/ui/card";
 
 export function RegisterForm() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -31,9 +36,52 @@ export function RegisterForm() {
     },
   });
 
-  const onSubmit = (values: RegisterFormData) => {
-    console.log(values);
-  };
+  const onSubmit = async (values: RegisterFormData) => {
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    const response = await fetch('/api/user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: values.email,
+        password: values.password,
+        name: values.fullName // Include all required fields
+      }),
+    });
+
+    // First get raw response text
+    const responseText = await response.text();
+    let result;
+
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      console.error('Failed to parse JSON:', responseText);
+      throw new Error(`Server returned: ${responseText.substring(0, 100)}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(result.message || `Error ${response.status}: Registration failed`);
+    }
+
+    console.log('Registration successful:', result);
+    router.push('/auth/login?registered=true');
+    
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error 
+      ? err.message 
+      : "Registration failed due to an unknown error";
+    
+    console.error('Registration error:', err);
+    setError(errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Card className="w-full max-w-md shadow-md border border-gray-200">
@@ -45,14 +93,27 @@ export function RegisterForm() {
       <CardContent>
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {error && (
+              <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                {error}
+              </div>
+            )}
+
             <FormField
-             control={form.control}
+              control={form.control}
               name="fullName"
-              render={({ field }: { field: any }) =>(
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setError(null); // Clear error when user types
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -60,13 +121,21 @@ export function RegisterForm() {
             />
 
             <FormField
-             control={form.control}
+              control={form.control}
               name="email"
-              render={({ field }: { field: any }) =>(
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="email@example.com" type="email" {...field} />
+                    <Input 
+                      placeholder="email@example.com" 
+                      type="email" 
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setError(null);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -74,13 +143,20 @@ export function RegisterForm() {
             />
 
             <FormField
-             control={form.control}
+              control={form.control}
               name="password"
-              render={({ field }: { field: any }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input 
+                      type="password" 
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setError(null);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -88,22 +164,40 @@ export function RegisterForm() {
             />
 
             <FormField
-             control={form.control}
+              control={form.control}
               name="confirmPassword"
-              render={({ field }: { field: any }) =>(
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input 
+                      type="password" 
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setError(null);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit" className="w-full">
-              Register
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating account..." : "Register"}
             </Button>
+            
+            <p className="text-sm text-center mt-4">
+              Already have an account?{" "}
+              <a href="/auth/login" className="text-blue-600 hover:underline">
+                Login here
+              </a>
+            </p>
           </form>
         </FormProvider>
       </CardContent>
