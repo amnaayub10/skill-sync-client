@@ -17,9 +17,12 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.3
         version: 1.2.3(@types/react@19.1.5)(react@19.1.0)
+      '@tanstack/react-query':
+        specifier: ^5.81.5
+        version: 5.81.5(react@19.1.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.76.2
-        version: 5.76.2(@tanstack/react-query@5.76.2(react@19.1.0))(react@19.1.0)
+        version: 5.76.2(@tanstack/react-query@5.81.5(react@19.1.0))(react@19.1.0)
       axios:
         specifier: ^1.9.0
         version: 1.9.0
@@ -35,6 +38,9 @@ importers:
       next:
         specifier: 15.1.8
         version: 15.1.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
         specifier: ^19.0.0
         version: 19.1.0
@@ -44,6 +50,9 @@ importers:
       react-hook-form:
         specifier: ^7.56.4
         version: 7.56.4(react@19.1.0)
+      sonner:
+        specifier: ^2.0.5
+        version: 2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       tailwind-merge:
         specifier: ^3.3.0
         version: 3.3.0
@@ -54,6 +63,9 @@ importers:
         specifier: ^3.25.24
         version: 3.25.26
     devDependencies:
+      '@tanstack/eslint-plugin-query':
+        specifier: ^5.81.2
+        version: 5.81.2(eslint@9.30.0(jiti@1.21.7))(typescript@5.8.3)
       '@types/node':
         specifier: ^20
         version: 20.17.50
@@ -424,8 +436,13 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
-  '@tanstack/query-core@5.76.2':
-    resolution: {integrity: sha512-PFGwWh5ss9cJQ67l6bZ7hqXbisX2gy13G2jP+VGY1bgdbCfOMWh6UBVnN62QbFXro6CCoX9hYzTnZHr6Rz00YQ==}
+  '@tanstack/eslint-plugin-query@5.81.2':
+    resolution: {integrity: sha512-h4k6P6fm5VhKP5NkK+0TTVpGGyKQdx6tk7NYYG7J7PkSu7ClpLgBihw7yzK8N3n5zPaF3IMyErxfoNiXWH/3/A==}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0
+
+  '@tanstack/query-core@5.81.5':
+    resolution: {integrity: sha512-ZJOgCy/z2qpZXWaj/oxvodDx07XcQa9BF92c0oINjHkoqUPsmm3uG08HpTaviviZ/N9eP1f9CM7mKSEkIo7O1Q==}
 
   '@tanstack/query-devtools@5.76.0':
     resolution: {integrity: sha512-1p92nqOBPYVqVDU0Ua5nzHenC6EGZNrLnB2OZphYw8CNA1exuvI97FVgIKON7Uug3uQqvH/QY8suUKpQo8qHNQ==}
@@ -436,8 +453,8 @@ packages:
       '@tanstack/react-query': ^5.76.2
       react: ^18 || ^19
 
-  '@tanstack/react-query@5.76.2':
-    resolution: {integrity: sha512-rGkWberCrFdIxMdvSAJM/UOKeu0O/JVTbMmfhQoJpiU9Uq0EDx2EMCadnNuJWbXR4smDA2t7DY3NKkYFmDVS5A==}
+  '@tanstack/react-query@5.81.5':
+    resolution: {integrity: sha512-lOf2KqRRiYWpQT86eeeftAGnjuTR35myTP8MXyvHa81VlomoAWNEd8x5vkcAfQefu0qtYCvyqLropFZqgI2EQw==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -1466,6 +1483,12 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  next-themes@0.4.6:
+    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+
   next@15.1.8:
     resolution: {integrity: sha512-lToSu4zUZEQw1nHUsmmPpkrWM8Zk/J7RXL7E7x/Kbk9SZ6rz3VK8knTaJ+Vtdj6RV4XFZS1qp93hgm8z8j6UGw==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
@@ -1776,6 +1799,12 @@ packages:
 
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
+
+  sonner@2.0.5:
+    resolution: {integrity: sha512-YwbHQO6cSso3HBXlbCkgrgzDNIhws14r4MO87Ofy+cV2X7ES4pOoAK3+veSmVTvqNx1BWUxlhPmZzP00Crk2aQ==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -2278,19 +2307,27 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@tanstack/query-core@5.76.2': {}
+  '@tanstack/eslint-plugin-query@5.81.2(eslint@9.30.0(jiti@1.21.7))(typescript@5.8.3)':
+    dependencies:
+      '@typescript-eslint/utils': 8.35.0(eslint@9.30.0(jiti@1.21.7))(typescript@5.8.3)
+      eslint: 9.30.0(jiti@1.21.7)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  '@tanstack/query-core@5.81.5': {}
 
   '@tanstack/query-devtools@5.76.0': {}
 
-  '@tanstack/react-query-devtools@5.76.2(@tanstack/react-query@5.76.2(react@19.1.0))(react@19.1.0)':
+  '@tanstack/react-query-devtools@5.76.2(@tanstack/react-query@5.81.5(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/query-devtools': 5.76.0
-      '@tanstack/react-query': 5.76.2(react@19.1.0)
+      '@tanstack/react-query': 5.81.5(react@19.1.0)
       react: 19.1.0
 
-  '@tanstack/react-query@5.76.2(react@19.1.0)':
+  '@tanstack/react-query@5.81.5(react@19.1.0)':
     dependencies:
-      '@tanstack/query-core': 5.76.2
+      '@tanstack/query-core': 5.81.5
       react: 19.1.0
 
   '@tybys/wasm-util@0.9.0':
@@ -3483,6 +3520,11 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  next-themes@0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
   next@15.1.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@next/env': 15.1.8
@@ -3840,6 +3882,11 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
     optional: true
+
+  sonner@2.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   source-map-js@1.2.1: {}
 
