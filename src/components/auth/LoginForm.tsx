@@ -14,8 +14,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function LoginForm() {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -24,10 +30,39 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: LoginFormData) {
-    console.log(values); // Replace with your login logic
-  }
+  const onSubmit = async (values: LoginFormData) => {
+  setIsLoading(true);
+  setError(null);
+  
+  try {
+    const response = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
+    });
 
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || `Server error: ${response.status}`);
+    }
+
+    if (!result.access_token) {
+      throw new Error("Authentication failed");
+    }
+
+    localStorage.setItem('token', result.access_token);
+    router.push("/Dashboard");
+
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Login failed");
+    form.resetField('password');
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -43,7 +78,11 @@ export function LoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="email@example.com" {...field} />
+                    <Input
+                      placeholder="email@example.com"
+                      {...field}
+                      autoComplete="email"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -57,16 +96,47 @@ export function LoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      {...field}
+                      autoComplete="current-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit" className="w-full">
-              Login
+            {error && (
+              <div className="text-center">
+                <p className="text-sm font-medium text-destructive">
+                  {error}
+                </p>
+                {error.includes("Cannot connect") && (
+                  <p className="text-xs mt-1">
+                    Ensure backend is running on port 3001
+                  </p>
+                )}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Connecting..." : "Login"}
             </Button>
+
+            <p className="text-sm text-center mt-4">
+              Don't have an account?{" "}
+              <a
+                href="/auth/register"
+                className="text-blue-600 hover:underline"
+              >
+                Register here
+              </a>
+            </p>
           </form>
         </Form>
       </CardContent>
