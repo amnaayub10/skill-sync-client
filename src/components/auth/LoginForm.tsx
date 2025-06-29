@@ -35,7 +35,7 @@ export function LoginForm() {
   setError(null);
   
   try {
-    const response = await fetch('/api/auth', {
+    const response = await fetch('http://localhost:3001/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
