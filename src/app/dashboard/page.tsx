@@ -5,198 +5,227 @@ import { useState } from 'react';
 type Skill = {
   id: string;
   name: string;
-  description: string;
   category: string;
 };
 
 type SkillSelection = {
   skillId: string;
-  type: 'offered' | 'wanted' | null;
-  proficiency: 'beginner' | 'intermediate' | 'advanced' | 'expert' | null;
+  type: 'offered' | 'wanted';
+  proficiency?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
 };
 
-export default function SkillsDashboard() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSkills, setSelectedSkills] = useState<SkillSelection[]>([]);
-
-  const skillCategories = [
-    "Frontend Development",
-    "Backend Development",
-    "Database Management",
-    "DevOps & Deployment",
-    "Version Control",
-    "Testing & Debugging"
-  ];
+export default function SkillsForm() {
+  const [selectedSkillId, setSelectedSkillId] = useState<string>('');
+  const [skillSelections, setSkillSelections] = useState<SkillSelection[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
 
   const skills: Skill[] = [
-    { id: '1', name: "HTML5", description: "Semantic markup, accessibility, modern APIs", category: "Frontend Development" },
-    { id: '2', name: "CSS3", description: "Flexbox, Grid, animations, preprocessors", category: "Frontend Development" },
-    { id: '3', name: "JavaScript", description: "ES6+, React, Vue, TypeScript", category: "Frontend Development" },
-    { id: '4', name: "Node.js", description: "Express, REST APIs, authentication", category: "Backend Development" },
-    { id: '5', name: "MongoDB", description: "NoSQL database, aggregation pipelines", category: "Database Management" },
-    { id: '6', name: "Git", description: "Version control, GitHub, GitLab", category: "Version Control" },
-    { id: '7', name: "Docker", description: "Containerization, deployment", category: "DevOps & Deployment" },
-    { id: '8', name: "Jest", description: "Unit testing, test coverage", category: "Testing & Debugging" }
+    { id: '1', name: "HTML5", category: "Frontend Development" },
+    { id: '2', name: "CSS3", category: "Frontend Development" },
+    { id: '3', name: "JavaScript", category: "Frontend Development" },
+    { id: '4', name: "Node.js", category: "Backend Development" },
+    { id: '5', name: "MongoDB", category: "Database Management" },
+    { id: '6', name: "Git", category: "Version Control" },
+    { id: '7', name: "Docker", category: "DevOps & Deployment" },
+    { id: '8', name: "Jest", category: "Testing & Debugging" }
   ];
 
-  const filteredSkills = selectedCategory
-    ? skills.filter(skill => skill.category === selectedCategory)
-    : skills;
-
-  const handleSkillTypeChange = (skillId: string, type: 'offered' | 'wanted') => {
-    setSelectedSkills(prev => {
-      const existing = prev.find(s => s.skillId === skillId);
-      if (existing) {
-        return prev.map(s => 
-          s.skillId === skillId 
-            ? { ...s, type, proficiency: type === 'offered' ? 'beginner' : null }
-            : s
-        );
-      }
-      return [...prev, { skillId, type, proficiency: type === 'offered' ? 'beginner' : null }];
-    });
+  const handleSkillChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedSkillId(e.target.value);
   };
 
-  const handleProficiencyChange = (skillId: string, proficiency: 'beginner' | 'intermediate' | 'advanced' | 'expert') => {
-    setSelectedSkills(prev => 
-      prev.map(s => 
-        s.skillId === skillId ? { ...s, proficiency } : s
+  const handleTypeChange = (type: 'offered' | 'wanted') => {
+    if (!selectedSkillId) return;
+
+    const newSelection: SkillSelection = {
+      skillId: selectedSkillId,
+      type,
+      proficiency: type === 'offered' ? 'beginner' : undefined
+    };
+
+    setSkillSelections(prev => [
+      ...prev.filter(s => s.skillId !== selectedSkillId),
+      newSelection
+    ]);
+  };
+
+  const handleProficiencyChange = (proficiency: 'beginner' | 'intermediate' | 'advanced' | 'expert') => {
+    if (!selectedSkillId) return;
+
+    setSkillSelections(prev =>
+      prev.map(skill =>
+        skill.skillId === selectedSkillId
+          ? { ...skill, proficiency }
+          : skill
       )
     );
   };
 
-  const getSkillSelection = (skillId: string) => {
-    return selectedSkills.find(s => s.skillId === skillId) || 
-           { skillId, type: null, proficiency: null };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      if (skillSelections.length === 0) {
+        setSubmitMessage('Please select at least one skill');
+        return;
+      }
+
+      console.log('Submitted skills:', skillSelections);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSubmitMessage('Skills submitted successfully!');
+      setSkillSelections([]);
+      setSelectedSkillId('');
+    } catch (error) {
+      setSubmitMessage('Error submitting skills');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  const getSelectedSkill = () => skills.find(skill => skill.id === selectedSkillId);
+  const getCurrentSelection = () => skillSelections.find(s => s.skillId === selectedSkillId);
+
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6 my-8">
-      <h1 className="text-3xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2 mb-6">
-        Web Developer Skills Dashboard
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto bg-white rounded-xl shadow-md p-6 my-8">
+      <h1 className="text-2xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2 mb-6">
+        Skills Selection Form
       </h1>
 
-      <div className="relative flex items-center gap-4 mb-8">
-        <div className="relative w-72">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-full flex justify-between items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg transition-colors duration-200"
-            aria-haspopup="listbox"
-            aria-expanded={isOpen}
+      <div className="space-y-6">
+        <div>
+          <label htmlFor="skill-select" className="block text-sm font-medium text-gray-700 mb-1">
+            Select a skill:
+          </label>
+          <select
+            id="skill-select"
+            value={selectedSkillId}
+            onChange={handleSkillChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {selectedCategory || 'All Technical Skills'}
-            <svg 
-              className={`w-4 h-4 ml-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+            <option value="">-- Select a skill --</option>
+            {skills.map(skill => (
+              <option key={skill.id} value={skill.id}>
+                {skill.name} ({skill.category})
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {isOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg overflow-hidden">
-              <ul className="py-1 max-h-60 overflow-auto">
-                <li>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(null);
-                      setIsOpen(false);
-                    }}
-                    className={`block w-full text-left px-4 py-2 hover:bg-blue-50 ${!selectedCategory ? 'bg-blue-100 text-blue-600' : 'text-gray-700'}`}
-                  >
-                    All Skills
-                  </button>
-                </li>
-                {skillCategories.map((category) => (
-                  <li key={category}>
+        {selectedSkillId && (
+          <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+            <h3 className="font-medium text-gray-800">
+              {getSelectedSkill()?.name} ({getSelectedSkill()?.category})
+            </h3>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                I want to:
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => handleTypeChange('offered')}
+                  className={`px-4 py-2 rounded-md ${
+                    getCurrentSelection()?.type === 'offered'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Offer this skill
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTypeChange('wanted')}
+                  className={`px-4 py-2 rounded-md ${
+                    getCurrentSelection()?.type === 'wanted'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Learn this skill
+                </button>
+              </div>
+            </div>
+
+            {getCurrentSelection()?.type === 'offered' && (
+              <div>
+                <label htmlFor="proficiency" className="block text-sm font-medium text-gray-700 mb-1">
+                  Proficiency level:
+                </label>
+                <select
+                  id="proficiency"
+                  value={getCurrentSelection()?.proficiency || ''}
+                  onChange={(e) => handleProficiencyChange(
+                    e.target.value as 'beginner' | 'intermediate' | 'advanced' | 'expert'
+                  )}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select your level</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="border-t pt-4">
+          <h3 className="font-medium text-gray-800 mb-2">Selected Skills:</h3>
+          {skillSelections.length === 0 ? (
+            <p className="text-gray-500">No skills selected yet</p>
+          ) : (
+            <ul className="space-y-2">
+              {skillSelections.map((selection) => {
+                const skill = skills.find(s => s.id === selection.skillId);
+                return (
+                  <li key={selection.skillId} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                    <div>
+                      <span className="font-medium">{skill?.name}</span> - 
+                      {selection.type === 'offered' 
+                        ? ` Offering (${selection.proficiency})` 
+                        : ' Want to learn'}
+                    </div>
                     <button
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        setIsOpen(false);
-                      }}
-                      className={`block w-full text-left px-4 py-2 hover:bg-blue-50 ${selectedCategory === category ? 'bg-blue-100 text-blue-600' : 'text-gray-700'}`}
+                      type="button"
+                      onClick={() => setSkillSelections(prev => prev.filter(s => s.skillId !== selection.skillId))}
+                      className="text-red-500 hover:text-red-700"
                     >
-                      {category}
+                      Remove
                     </button>
                   </li>
-                ))}
-              </ul>
-            </div>
+                );
+              })}
+            </ul>
           )}
         </div>
 
-        {selectedCategory && (
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-          >
-            Clear Filter
-          </button>
+        {submitMessage && (
+          <div className={`p-3 rounded-md ${
+            submitMessage.includes('successfully') 
+              ? 'bg-green-100 text-green-700' 
+              : 'bg-red-100 text-red-700'
+          }`}>
+            {submitMessage}
+          </div>
         )}
+
+        <button
+          type="submit"
+          disabled={isSubmitting || skillSelections.length === 0}
+          className={`w-full px-4 py-2 rounded-lg text-white font-medium ${
+            isSubmitting || skillSelections.length === 0
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600'
+          } transition-colors duration-200`}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Skills'}
+        </button>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredSkills.map((skill) => {
-          const selection = getSkillSelection(skill.id);
-          
-          return (
-            <div 
-              key={skill.id} 
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="p-5">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">{skill.name}</h3>
-                <p className="text-gray-600 mb-4">{skill.description}</p>
-                <span className="inline-block bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded mb-4">
-                  {skill.category}
-                </span>
-
-                <div className="mt-4 space-y-3">
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-1">Select type:</label>
-                    <select
-                      value={selection.type || ''}
-                      onChange={(e) => handleSkillTypeChange(
-                        skill.id, 
-                        e.target.value as 'offered' | 'wanted'
-                      )}
-                      className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select an option</option>
-                      <option value="offered">I can offer this skill</option>
-                      <option value="wanted">I want to learn this</option>
-                    </select>
-                  </div>
-
-                  {selection.type === 'offered' && (
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-700 mb-1">Proficiency level:</label>
-                      <select
-                        value={selection.proficiency || ''}
-                        onChange={(e) => handleProficiencyChange(
-                          skill.id, 
-                          e.target.value as 'beginner' | 'intermediate' | 'advanced' | 'expert'
-                        )}
-                        className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select proficiency</option>
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                        <option value="expert">Expert</option>
-                      </select>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    </form>
   );
 }
