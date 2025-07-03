@@ -3,31 +3,10 @@
 import { useState } from 'react';
 import { authFetch } from '@/lib/auth';
 
-type Skill = {
-  id: string;
-  name: string;
-  type: 'OFFERED' | 'WANTED_TO_LEARN';
-  proficiency?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
-  description?: string;
-};
-
 const WEB_DEVELOPMENT_SKILLS = [
-  'HTML',
-  'CSS',
-  'JavaScript',
-  'TypeScript',
-  'React',
-  'Next.js',
-  'Node.js',
-  'Express',
-  'MongoDB',
-  'SQL',
-  'Git',
-  'Docker',
-  'GraphQL',
-  'REST API',
-  'Tailwind CSS',
-  'Redux',
+  'HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js',
+  'Express', 'MongoDB', 'SQL', 'Git', 'Docker', 'GraphQL', 'REST API',
+  'Tailwind CSS', 'Redux',
 ];
 
 export default function SkillsPopup({
@@ -46,7 +25,7 @@ export default function SkillsPopup({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedSkill) return;
 
@@ -87,13 +66,10 @@ export default function SkillsPopup({
 
       onSkillAdded?.();
       onClose();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error adding skill:', err);
       let errorMessage = 'Failed to add skill. Please try again.';
       if (err instanceof Error) errorMessage = err.message;
-      else if (typeof err === 'string') errorMessage = err;
-      else if (typeof err === 'object' && err !== null && 'message' in err) errorMessage = String((err as any).message);
-
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -102,12 +78,12 @@ export default function SkillsPopup({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-sm w-full shadow-xl">
+      <div className="bg-white text-black p-6 rounded-lg max-w-sm w-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">Add Skill</h2>
+          <h2 className="text-xl font-bold">Add Skill</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            className="text-gray-500 hover:text-gray-700"
             disabled={isSubmitting}
           >
             ×
@@ -115,18 +91,18 @@ export default function SkillsPopup({
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm border border-red-300">
+          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 text-sm font-semibold text-gray-700">Skill</label>
+            <label className="block mb-1 text-sm font-medium">Skill</label>
             <select
               value={selectedSkill}
               onChange={(e) => setSelectedSkill(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded text-sm"
               required
               disabled={isSubmitting}
             >
@@ -140,11 +116,11 @@ export default function SkillsPopup({
           </div>
 
           <div>
-            <label className="block mb-1 text-sm font-semibold text-gray-700">Type</label>
+            <label className="block mb-1 text-sm font-medium">Type</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as 'OFFERED' | 'WANTED_TO_LEARN')}
-              className="w-full p-2 border border-gray-300 rounded text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded text-sm"
               disabled={isSubmitting}
             >
               <option value="OFFERED">I offered this</option>
@@ -153,11 +129,11 @@ export default function SkillsPopup({
           </div>
 
           <div>
-            <label className="block mb-1 text-sm font-semibold text-gray-700">Proficiency</label>
+            <label className="block mb-1 text-sm font-medium">Proficiency</label>
             <select
               value={proficiency}
-              onChange={(e) => setProficiency(e.target.value as any)}
-              className="w-full p-2 border border-gray-300 rounded text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setProficiency(e.target.value as typeof proficiency)}
+              className="w-full p-2 border rounded text-sm"
               disabled={isSubmitting}
             >
               <option value="BEGINNER">Beginner</option>
@@ -168,11 +144,11 @@ export default function SkillsPopup({
           </div>
 
           <div>
-            <label className="block mb-1 text-sm font-semibold text-gray-700">Description (Optional)</label>
+            <label className="block mb-1 text-sm font-medium">Description (Optional)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded text-sm text-black"
               placeholder="E.g. Currently working at Google, can teach DSA to crack any FANG interview"
               rows={3}
               disabled={isSubmitting}
@@ -183,7 +159,7 @@ export default function SkillsPopup({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 text-sm text-gray-700"
+              className="flex-1 px-4 py-2 border rounded hover:bg-gray-100 text-sm"
               disabled={isSubmitting}
             >
               Cancel
@@ -191,8 +167,8 @@ export default function SkillsPopup({
             <button
               type="submit"
               disabled={!selectedSkill || isSubmitting}
-              className={`flex-1 px-4 py-2 rounded text-white text-sm transition-all duration-200 ${
-                !selectedSkill || isSubmitting ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
+              className={`flex-1 px-4 py-2 rounded text-white text-sm ${
+                !selectedSkill || isSubmitting ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
               }`}
             >
               {isSubmitting ? 'Adding...' : 'Add Skill'}
