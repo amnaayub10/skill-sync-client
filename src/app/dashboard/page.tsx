@@ -23,8 +23,10 @@ const Dashboard = ({ userId }: { userId: number }) => {
     try {
       setLoading(true);
       const res = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/skills/user-skills?userId=${userId}`);
-      const data = await res.json();
-      setSkills(data);
+      const data: unknown = await res.json();
+      if (Array.isArray(data)) {
+        setSkills(data as UserSkill[]);
+      }
     } catch (err) {
       console.error('Failed to fetch skills', err);
     } finally {
@@ -52,8 +54,7 @@ const Dashboard = ({ userId }: { userId: number }) => {
         method: 'DELETE',
       });
 
-      const result = await res.json();
-      console.log('Delete result:', result);
+      const result: { message?: string } = await res.json();
 
       if (res.ok) {
         setSkills((prev) => prev.filter((s) => s.id !== id));
@@ -69,7 +70,7 @@ const Dashboard = ({ userId }: { userId: number }) => {
 
   const filteredSkills = filter === 'ALL' ? skills : skills.filter((s) => s.type === filter);
 
-  const badgeColor = (level: string | undefined) => {
+  const badgeColor = (level?: string) => {
     if (!level) return 'bg-gray-300';
     if (level.toLowerCase().includes('expert')) return 'bg-green-500';
     if (level.toLowerCase().includes('intermediate')) return 'bg-yellow-400';
@@ -87,7 +88,7 @@ const Dashboard = ({ userId }: { userId: number }) => {
           <div className="mt-4 sm:mt-0 flex items-center gap-4">
             <select
               value={filter}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilter(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilter(e.target.value as 'ALL' | 'OFFERED' | 'WANTED_TO_LEARN')}
               className="bg-white text-gray-800 border border-gray-300 rounded-lg px-3 py-2 shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="ALL">All Types</option>
@@ -124,12 +125,10 @@ const Dashboard = ({ userId }: { userId: number }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredSkills.map((skill) => (
+                {filteredSkills.map((skill, index) => (
                   <tr
                     key={skill.id}
-                    className={`${
-                      skills.indexOf(skill) % 2 === 0 ? 'bg-white/5' : 'bg-white/10'
-                    } hover:bg-white/20 transition-colors`}
+                    className={`${index % 2 === 0 ? 'bg-white/5' : 'bg-white/10'} hover:bg-white/20 transition-colors`}
                   >
                     <td className="px-6 py-3">{skill.skill?.name || '—'}</td>
                     <td className="px-6 py-3 capitalize">{skill.type.toLowerCase().replaceAll('_', ' ')}</td>
