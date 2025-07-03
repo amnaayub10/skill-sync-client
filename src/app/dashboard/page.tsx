@@ -1,17 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SkillsPopup from '@/components/SkillsPopup';
 import { authFetch } from '@/lib/auth';
 import Swal from 'sweetalert2';
 
+export type UserSkill = {
+  id: string;
+  skill: { name: string };
+  type: 'OFFERED' | 'WANTED_TO_LEARN';
+  proficiency?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+  description?: string;
+};
+
 const Dashboard = ({ userId }: { userId: number }) => {
-  const [skills, setSkills] = useState<any[]>([]);
+  const [skills, setSkills] = useState<UserSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'OFFERED' | 'WANTED_TO_LEARN'>('ALL');
 
-  const fetchSkills = async () => {
+  const fetchSkills = useCallback(async () => {
     try {
       setLoading(true);
       const res = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/skills/user-skills?userId=${userId}`);
@@ -22,13 +30,13 @@ const Dashboard = ({ userId }: { userId: number }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchSkills();
-  }, []);
+  }, [fetchSkills]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     const confirm = await Swal.fire({
       title: 'Are you sure?',
       text: 'This skill will be deleted!',
@@ -44,11 +52,14 @@ const Dashboard = ({ userId }: { userId: number }) => {
         method: 'DELETE',
       });
 
+      const result = await res.json();
+      console.log('Delete result:', result);
+
       if (res.ok) {
         setSkills((prev) => prev.filter((s) => s.id !== id));
         Swal.fire('Deleted!', 'Skill has been removed.', 'success');
       } else {
-        Swal.fire('Error!', 'Failed to delete skill.', 'error');
+        Swal.fire('Error!', result.message || 'Failed to delete skill.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -58,7 +69,7 @@ const Dashboard = ({ userId }: { userId: number }) => {
 
   const filteredSkills = filter === 'ALL' ? skills : skills.filter((s) => s.type === filter);
 
-  const badgeColor = (level: string) => {
+  const badgeColor = (level: string | undefined) => {
     if (!level) return 'bg-gray-300';
     if (level.toLowerCase().includes('expert')) return 'bg-green-500';
     if (level.toLowerCase().includes('intermediate')) return 'bg-yellow-400';
@@ -76,7 +87,7 @@ const Dashboard = ({ userId }: { userId: number }) => {
           <div className="mt-4 sm:mt-0 flex items-center gap-4">
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilter(e.target.value as any)}
               className="bg-white text-gray-800 border border-gray-300 rounded-lg px-3 py-2 shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="ALL">All Types</option>
@@ -113,19 +124,17 @@ const Dashboard = ({ userId }: { userId: number }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredSkills.map((skill, idx) => (
+                {filteredSkills.map((skill) => (
                   <tr
                     key={skill.id}
                     className={`${
-                      idx % 2 === 0 ? 'bg-white/5' : 'bg-white/10'
+                      skills.indexOf(skill) % 2 === 0 ? 'bg-white/5' : 'bg-white/10'
                     } hover:bg-white/20 transition-colors`}
                   >
                     <td className="px-6 py-3">{skill.skill?.name || '—'}</td>
                     <td className="px-6 py-3 capitalize">{skill.type.toLowerCase().replaceAll('_', ' ')}</td>
                     <td className="px-6 py-3">
-                      <span
-                        className={`text-xs px-3 py-1 rounded-full ${badgeColor(skill.proficiency)} text-white`}
-                      >
+                      <span className={`text-xs px-3 py-1 rounded-full ${badgeColor(skill.proficiency)} text-white`}>
                         {skill.proficiency || '—'}
                       </span>
                     </td>
