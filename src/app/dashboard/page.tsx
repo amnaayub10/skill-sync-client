@@ -1,19 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import SkillsPopup from '@/components/SkillsPopup';
 import { authFetch } from '@/lib/auth';
 import Swal from 'sweetalert2';
+import { SkillsPopup } from '@/components/SkillsPopup';
 
 export type UserSkill = {
   id: string;
-  skill: { name: string };
+  skill: { name: string; };
   type: 'OFFERED' | 'WANTED_TO_LEARN';
   proficiency?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
   description?: string;
 };
 
-const Dashboard = ({ userId }: { userId: number }) => {
+const Dashboard = ({ userId }: { userId: number; }) => {
   const [skills, setSkills] = useState<UserSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
@@ -54,7 +54,7 @@ const Dashboard = ({ userId }: { userId: number }) => {
         method: 'DELETE',
       });
 
-      const result: { message?: string } = await res.json();
+      const result: { message?: string; } = await res.json();
 
       if (res.ok) {
         setSkills((prev) => prev.filter((s) => s.id !== id));
@@ -95,12 +95,7 @@ const Dashboard = ({ userId }: { userId: number }) => {
               <option value="OFFERED">Offered</option>
               <option value="WANTED_TO_LEARN">Wanted to Learn</option>
             </select>
-            <button
-              onClick={() => setShowPopup(true)}
-              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-semibold shadow-lg transition-all duration-200"
-            >
-              ➕ Add Skill
-            </button>
+            <SkillsPopup />
           </div>
         </div>
 
@@ -154,13 +149,6 @@ const Dashboard = ({ userId }: { userId: number }) => {
         )}
       </div>
 
-      {showPopup && (
-        <SkillsPopup
-          userId={userId}
-          onClose={() => setShowPopup(false)}
-          onSkillAdded={fetchSkills}
-        />
-      )}
     </div>
   );
 };

@@ -1,181 +1,147 @@
-'use client';
-
+import { auth } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import Label from './ui/label';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
+import { Skill } from '@/types/skills';
+import { proficiencyLevels, skillTypes } from '@/lib/data';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useState } from 'react';
-import { authFetch } from '@/lib/auth';
+import { Loader2, Loader2Icon } from 'lucide-react';
 
-const WEB_DEVELOPMENT_SKILLS = [
-  'HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js',
-  'Express', 'MongoDB', 'SQL', 'Git', 'Docker', 'GraphQL', 'REST API',
-  'Tailwind CSS', 'Redux',
-];
 
-export default function SkillsPopup({
-  userId,
-  onClose,
-  onSkillAdded,
-}: {
-  userId: number;
-  onClose: () => void;
-  onSkillAdded?: () => void;
-}) {
-  const [selectedSkill, setSelectedSkill] = useState('');
-  const [type, setType] = useState<'OFFERED' | 'WANTED_TO_LEARN'>('OFFERED');
-  const [proficiency, setProficiency] = useState<'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT'>('BEGINNER');
-  const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+const getSkills = async () => {
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/skills`;
+  const response = await axios.get<Skill[]>(url, auth());
+  return response.data;
+};
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedSkill) return;
+export function SkillsPopup() {
+  const [isOpen, setIsOpen] = useState(false);
 
-    setIsSubmitting(true);
-    setError('');
 
-    try {
-      const skillResponse = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/skills`, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: selectedSkill,
-          description: `${selectedSkill} skill`,
-        }),
-      });
+  const { data, isLoading, isSuccess } = useQuery({
+    queryKey: ['skills'],
+    queryFn: getSkills,
+    enabled: isOpen
+  });
 
-      if (!skillResponse.ok) {
-        const errorData = await skillResponse.json();
-        throw new Error(errorData.message || 'Failed to create skill');
-      }
-
-      const skillData = await skillResponse.json();
-
-      const userSkillResponse = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/skills/add-user-skill`, {
-        method: 'POST',
-        body: JSON.stringify({
-          userId,
-          skillId: skillData.id,
-          type,
-          proficiency,
-          description,
-        }),
-      });
-
-      if (!userSkillResponse.ok) {
-        const errorData = await userSkillResponse.json();
-        throw new Error(errorData.message || 'Failed to add user skill');
-      }
-
-      onSkillAdded?.();
-      onClose();
-    } catch (err: unknown) {
-      console.error('Error adding skill:', err);
-      let errorMessage = 'Failed to add skill. Please try again.';
-      if (err instanceof Error) errorMessage = err.message;
-      setError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white text-black p-6 rounded-lg max-w-sm w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Add Skill</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-            disabled={isSubmitting}
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-semibold shadow-lg transition-all duration-200">
+        Add Your Skill
+      </DialogTrigger>
+      <DialogContent
+        onPointerDownOutside={(e: Event) => e.preventDefault()}
+      >
+        <DialogHeader>
+          <DialogTitle>Add your skill to dashboard</DialogTitle>
+        </DialogHeader>
+        {isLoading && <Loader2 className='animate-spin' />}
+        {isSuccess && (
+          <form id='add-skill'
+            className='p-4 space-y-10'
           >
-            ×
-          </button>
-        </div>
+            <section className=''>
 
-        {error && (
-          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">
-            {error}
-          </div>
+              <div className='my-4 space-y-2'>
+                <Label> Select Skill </Label>
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {data?.map(skill => (
+                      <SelectItem
+                        key={skill.id}
+                        value={skill.name}
+                      >
+                        {skill.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='my-4 space-y-2'>
+                <Label> Select Type </Label>
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {skillTypes.map(skill => (
+                      <SelectItem
+                        key={skill.id}
+                        value={skill.name}
+                      >
+                        {skill.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='my-4 space-y-2'>
+                <Label> Select Proficiency level </Label>
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {proficiencyLevels.map(skill => (
+                      <SelectItem
+                        key={skill.id}
+                        value={skill.name}
+                      >
+                        {skill.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='my-4 space-y-2'>
+                <Label> Description </Label>
+                <Textarea
+                  placeholder='Helping learners master DSA | X yrs @ABC'
+                />
+              </div>
+
+            </section>
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant={'outline'}>
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                type='submit'
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
         )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1 text-sm font-medium">Skill</label>
-            <select
-              value={selectedSkill}
-              onChange={(e) => setSelectedSkill(e.target.value)}
-              className="w-full p-2 border rounded text-sm"
-              required
-              disabled={isSubmitting}
-            >
-              <option value="">Select a skill</option>
-              {WEB_DEVELOPMENT_SKILLS.map((skill) => (
-                <option key={skill} value={skill}>
-                  {skill}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium">Type</label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as 'OFFERED' | 'WANTED_TO_LEARN')}
-              className="w-full p-2 border rounded text-sm"
-              disabled={isSubmitting}
-            >
-              <option value="OFFERED">I offered this</option>
-              <option value="WANTED_TO_LEARN">I want to learn this</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium">Proficiency</label>
-            <select
-              value={proficiency}
-              onChange={(e) => setProficiency(e.target.value as typeof proficiency)}
-              className="w-full p-2 border rounded text-sm"
-              disabled={isSubmitting}
-            >
-              <option value="BEGINNER">Beginner</option>
-              <option value="INTERMEDIATE">Intermediate</option>
-              <option value="ADVANCED">Advanced</option>
-              <option value="EXPERT">Expert</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium">Description (Optional)</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border rounded text-sm text-black"
-              placeholder="E.g. Currently working at Google, can teach DSA to crack any FANG interview"
-              rows={3}
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="flex space-x-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border rounded hover:bg-gray-100 text-sm"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!selectedSkill || isSubmitting}
-              className={`flex-1 px-4 py-2 rounded text-white text-sm ${
-                !selectedSkill || isSubmitting ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
-              }`}
-            >
-              {isSubmitting ? 'Adding...' : 'Add Skill'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
